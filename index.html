@@ -326,7 +326,7 @@
         @media (max-width: 768px) {
             section { padding: 80px 5%; }
             .section-title { margin-bottom: 50px; }
-            .art-frame { padding: 5vw; }
+            .art-frame { padding: 4vw; }
             .carousel-track { height: 50vh; min-height: 300px; }
             .nav-btn { width: 45px; height: 45px; font-size: 1.3rem; }
             .prev-btn { left: 5px; }
@@ -334,6 +334,52 @@
             .music-player { bottom: 20px; right: 20px; padding: 8px 15px; gap: 10px;}
             .music-text { display: none; }
             .photo-grid { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        /* Strawberry Animation */
+        #strawberry-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .strawberry-particle {
+            position: absolute;
+            bottom: -50px; /* Start below the viewport */
+            will-change: transform, opacity;
+            animation-name: floatUp;
+            animation-timing-function: linear;
+            animation-iteration-count: 1;
+            opacity: 0;
+        }
+
+        .strawberry-particle svg {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 0 3px rgba(0,0,0,0.15));
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Music Player Icon States */
+        .play-btn .pause-icon {
+            display: none;
+        }
+        .play-btn.playing .play-icon {
+            display: none;
+        }
+        .play-btn.playing .pause-icon {
+            display: block;
         }
     </style>
 </head>
@@ -345,7 +391,10 @@
 
     <div class="music-player">
         <span class="music-text">Now Playing: Your Universe</span>
-        <button class="play-btn" id="play-pause-btn" onclick="toggleMusic()">▶</button>
+        <button class="play-btn" id="play-pause-btn" onclick="toggleMusic()" aria-label="Play or Pause Music">
+            <svg class="play-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            <svg class="pause-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+        </button>
     </div>
 
     <header>
@@ -371,7 +420,9 @@
     <section>
         <h2 class="section-title reveal">The Poetry Collection</h2>
         <div class="carousel-wrapper art-frame reveal">
-            <button class="nav-btn prev-btn" onclick="moveSlide(-1)">&#8249;</button>
+            <button class="nav-btn prev-btn" onclick="moveSlide(-1)" aria-label="Previous Slide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
             
             <div class="carousel-track">
                 <div class="slide active"><img src="poem1.png" alt="Poem 1"></div>
@@ -379,7 +430,9 @@
                 <div class="slide"><img src="poem3.png" alt="Poem 3"></div>
             </div>
 
-            <button class="nav-btn next-btn" onclick="moveSlide(1)">&#8250;</button>
+            <button class="nav-btn next-btn" onclick="moveSlide(1)" aria-label="Next Slide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
         </div>
     </section>
 
@@ -390,11 +443,14 @@
         </div>
     </section>
 
+    <div id="strawberry-container"></div>
+
     <footer>
         <p>Curated and coded with love.</p>
     </footer>
 
     <script>
+        "use strict";
         // --- Carousel Logic ---
         const slides = document.querySelectorAll('.slide');
         let currentSlide = 0;
@@ -441,13 +497,47 @@
         function toggleMusic() {
             if (isPlaying) {
                 music.pause();
-                playBtn.innerHTML = "▶";
+                playBtn.classList.remove("playing");
             } else {
                 music.play();
-                playBtn.innerHTML = "⏸";
+                playBtn.classList.add("playing");
             }
             isPlaying = !isPlaying;
         }
+
+        // --- Floating Strawberry Animation ---
+        function createStrawberry() {
+            const container = document.getElementById('strawberry-container');
+            if (!container) return;
+
+            const strawberry = document.createElement('div');
+            strawberry.className = 'strawberry-particle';
+
+            const strawberrySVG = `
+                <svg viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="var(--accent-strawberry)" d="M89.3,31.9C82.1,12.5,62.6,0,49.9,0C37.2,0,17.7,12.5,10.5,31.9 C-1.4,62.4,23.5,110.9,49.9,125C76.3,110.9,101.2,62.4,89.3,31.9z"/>
+                </svg>
+            `;
+            strawberry.innerHTML = strawberrySVG;
+
+            const size = Math.random() * 20 + 10; // 10px to 30px
+            const duration = Math.random() * 10 + 10; // 10s to 20s
+            const left = Math.random() * 100;
+
+            strawberry.style.width = `${size}px`;
+            strawberry.style.left = `${left}vw`;
+            strawberry.style.animationDuration = `${duration}s`;
+            strawberry.style.animationDelay = `${Math.random() * 5}s`;
+
+            container.appendChild(strawberry);
+
+            strawberry.addEventListener('animationend', () => {
+                strawberry.remove();
+            }, { once: true });
+        }
+
+        // Create a new strawberry every so often
+        setInterval(createStrawberry, 400);
     </script>
 </body>
 </html>
